@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <!-- Favicons -->
+    <link href="Display Logo (no background).png" rel="icon">
+    <link href="Display Logo (no background).png" rel="apple-touch-icon">
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #236edf, #2da04a);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+        }
+        .login-container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-container h1 {
+            margin-bottom: 20px;
+            color: #000000;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background: #1fb168;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .login-container button:hover {
+            background: #000000;
+        }
+        .loading-icon {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2183d3;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            display: none;
+            color: red;
+            margin-top: 20px;
+        }
+        .help-text {
+            color: #999;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_3SwJr4tFX9rhA2s8ihmOirW-WzLBPEA",
+            authDomain: "pastoral-care-cfda2.firebaseapp.com",
+            databaseURL: "https://pastoral-care-cfda2-default-rtdb.firebaseio.com",
+            projectId: "pastoral-care-cfda2",
+            storageBucket: "pastoral-care-cfda2.appspot.com",
+            messagingSenderId: "209017266390",
+            appId: "1:209017266390:web:d81ebbc42639e65c832977",
+            measurementId: "G-SK40B5C2VR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getFirestore();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('login-form');
+            const loadingIcon = document.getElementById('loading-icon');
+            const errorMessage = document.getElementById('error-message');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = loginForm.email.value;
+                const password = loginForm.password.value;
+
+                loadingIcon.style.display = 'inline-block';
+                errorMessage.style.display = 'none';
+
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const redirectCode = userData.redirectCode;
+
+                        // Redirection logic
+                        const redirectionMap = {
+                            "225566": "JordanA.html",
+                            "101": "TJ/TerriJ.html",
+                            "102": "CG/Ceng.html",
+                            "103": "TL/TerriL.html",
+                            "104": "CH/Chenh.html",
+                            // Add more redirection codes and corresponding HTML files here
+                        };
+
+                        if (redirectionMap[redirectCode]) {
+                            // Store user ID token in localStorage (or a more secure storage)
+                            const idToken = await user.getIdToken();
+                            localStorage.setItem('idToken', idToken);
+                            window.location.href = redirectionMap[redirectCode];
+                        } else {
+                            throw new Error('Invalid redirect code!');
+                        }
+                    } else {
+                        throw new Error('No such document!');
+                    }
+                } catch (error) {
+                    errorMessage.style.display = 'block';
+                    console.error("Error logging in:", error);
+                } finally {
+                    loadingIcon.style.display = 'none';
+                }
+            });
+
+            // Check if user is already logged in
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is logged in, you can redirect them to the appropriate page if needed
+                    console.log('User is already logged in:', user);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="login-container">
+    <h1>User Login</h1>
+    <form id="login-form">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Confirm Details</button>
+        <div class="loading-icon" id="loading-icon"></div>
+    </form>
+    <div class="error-message" id="error-message">Sorry, we couldn't find your details. Please try again.</div>
+    <p class="help-text">Having trouble? Please talk to your organizer who can help!</p>
+</div>
+</body>
+</html>
