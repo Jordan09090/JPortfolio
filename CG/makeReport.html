@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make a Report - School Box JJLC</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .header button {
+            background: #0071e3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .header button:hover {
+            background: #005bb5;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .report-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 60%;
+        }
+
+        .report-form h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .report-form form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .report-form form label {
+            font-weight: bold;
+        }
+
+        .report-form form input, .report-form form select, .report-form form textarea, .report-form form button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .report-form form button {
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .report-form form button:hover {
+            background: #555;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #0071e3;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getDatabase, ref, set, get, child, push } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_3SwJr4tFX9rhA2s8ihmOirW-WzLBPEA",
+            authDomain: "pastoral-care-cfda2.firebaseapp.com",
+            databaseURL: "https://pastoral-care-cfda2-default-rtdb.firebaseio.com",
+            projectId: "pastoral-care-cfda2",
+            storageBucket: "pastoral-care-cfda2.appspot.com",
+            messagingSenderId: "209017266390",
+            appId: "1:209017266390:web:d81ebbc42639e65c832977",
+            measurementId: "G-SK40B5C2VR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getDatabase();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const userName = "Guande Cen"; // Fixed name, change this per user HTML
+                    document.getElementById('welcome-message').textContent = `Mr ${userName}`;
+                    document.getElementById('user-name').value = userName;
+                    loadStudents();
+                } else {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }
+            });
+
+            document.getElementById('logout-button').addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }).catch((error) => {
+                    console.error('Sign Out Error', error);
+                });
+            });
+
+            document.getElementById('report-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('title').value;
+                const student = document.getElementById('student').value;
+                const dateOfOccurrence = document.getElementById('date-of-occurrence').value;
+                const incidentCategory = document.getElementById('incident-category').value;
+                const details = document.getElementById('details').value;
+                const classSubject = document.getElementById('class-subject').value;
+                const additionalInfo = document.getElementById('additional-info').value;
+                const severity = document.getElementById('severity').value;
+                const visibility = document.getElementById('visibility').value;
+                const userName = document.getElementById('user-name').value;
+
+                if (title && student && dateOfOccurrence && incidentCategory && details && visibility) {
+                    try {
+                        showLoading();
+                        const reportData = {
+                            title,
+                            student,
+                            dateOfOccurrence,
+                            incidentCategory,
+                            details,
+                            classSubject,
+                            additionalInfo,
+                            severity,
+                            visibility,
+                            reportedBy: userName,
+                            timestamp: new Date().toISOString()
+                        };
+
+                        const reportRef = ref(db, `students/${student}/reports`);
+                        await push(reportRef, reportData);
+
+                        document.getElementById('report-form').reset();
+                        window.location.href = 'Ceng.html'; // Redirect to the home page
+                    } catch (error) {
+                        console.error('Error submitting report:', error);
+                    } finally {
+                        hideLoading();
+                    }
+                } else {
+                    alert('Title, student, date of occurrence, incident category, details, and visibility are required.');
+                }
+            });
+        });
+
+        async function loadStudents() {
+            const studentSelect = document.getElementById('student');
+            studentSelect.innerHTML = '';
+
+            try {
+                const dbRef = ref(db);
+                const snapshot = await get(child(dbRef, 'students'));
+                if (snapshot.exists()) {
+                    const students = snapshot.val();
+                    Object.keys(students).forEach((studentName) => {
+                        const option = document.createElement('option');
+                        option.value = studentName;
+                        option.textContent = studentName;
+                        studentSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('show');
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h2 id="welcome-message">Mr Guande Cen</h2>
+        <div>
+            <button onclick="window.location.href='Ceng.html'">Home</button>
+            <button href="https://jordanbantleman.com/Login.html" id="logout-button">Log out</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="report-form">
+            <h2>Make a Report</h2>
+            <form id="report-form">
+                <label for="title">Title:</label>
+                <input type="text" id="title" required>
+
+                <label for="student">Student:</label>
+                <select id="student" required></select>
+
+                <label for="date-of-occurrence">Date of occurrence:</label>
+                <input type="date" id="date-of-occurrence" required>
+
+                <label for="incident-category">Incident Category:</label>
+                <input type="text" id="incident-category" required>
+
+                <label for="class-subject">Class/Subject of occurrence:</label>
+                <input type="text" id="class-subject">
+
+                <label for="details">Details:</label>
+                <textarea id="details" rows="4" required></textarea>
+
+                <label for="additional-info">Additional Information:</label>
+                <textarea id="additional-info" rows="2"></textarea>
+
+                <label for="severity">Severity:</label>
+                <select id="severity">
+                    <option value="" disabled selected>Select severity</option>
+                    <option value="Low">Low</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="High">High</option>
+                </select>
+
+                <label for="visibility">Visibility:</label>
+                <select id="visibility" required>
+                    <option value="" disabled selected>Select visibility</option>
+                    <option value="Public">Public</option>
+                    <option value="Private">Private</option>
+                </select>
+
+                <input type="hidden" id="user-name">
+
+                <button type="submit">Submit Report</button>
+            </form>
+        </div>
+    </div>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+</body>
+</html>

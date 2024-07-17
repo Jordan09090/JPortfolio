@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management</title>
+
+    <link href="Display Logo (no background).png" rel="icon">
+    <link href="Display Logo (no background).png" rel="apple-touch-icon">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .header button {
+            background: #0071e3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .header button:hover {
+            background: #005bb5;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 40px;
+            gap: 20px;
+        }
+
+        .left-panel, .right-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 48%;
+        }
+
+        .left-panel h2, .right-panel h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .left-panel form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .left-panel form label {
+            font-weight: bold;
+        }
+
+        .left-panel form input, .left-panel form select, .left-panel form button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .left-panel form button {
+            background: #0071e3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .left-panel form button:hover {
+            background: #005bb5;
+        }
+
+        .right-panel .student {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 10px 0;
+            border-left: 5px solid #0071e3;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-panel .student img {
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .right-panel .student .details {
+            flex-grow: 1;
+        }
+
+        .right-panel .student .details strong {
+            display: block;
+        }
+
+        .right-panel .student .timestamp {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .right-panel .student .read-more {
+            background: #333;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .search-bar button {
+            padding: 10px 15px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .search-bar button:hover {
+            background: #005bb5;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #0071e3;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_3SwJr4tFX9rhA2s8ihmOirW-WzLBPEA",
+            authDomain: "pastoral-care-cfda2.firebaseapp.com",
+            databaseURL: "https://pastoral-care-cfda2-default-rtdb.firebaseio.com",
+            projectId: "pastoral-care-cfda2",
+            storageBucket: "pastoral-care-cfda2.appspot.com",
+            messagingSenderId: "209017266390",
+            appId: "1:209017266390:web:d81ebbc42639e65c832977",
+            measurementId: "G-SK40B5C2VR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getDatabase();
+        const storage = getStorage();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const userName = "Ceng.html"; // Fixed name, change this per user HTML
+                    document.getElementById('welcome-message').textContent = `Mr ${userName}`;
+                    document.getElementById('user-name').value = userName;
+                    loadStudents();
+                } else {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }
+            });
+
+            document.getElementById('logout-button').addEventListener('click', () => {
+                signOut(auth).then(() => {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }).catch((error) => {
+                    console.error('Sign Out Error', error);
+                });
+            });
+
+            document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const studentName = document.getElementById('student-name').value;
+                const studentType = document.getElementById('student-type').value;
+                const photoFile = document.getElementById('student-photo').files[0];
+                const yearJoining = document.getElementById('year-joining').value;
+                const house = document.getElementById('house').value;
+                const dateOfBirth = document.getElementById('date-of-birth').value;
+                const userName = document.getElementById('user-name').value;
+
+                if (studentName && studentType && photoFile) {
+                    try {
+                        showLoading();
+                        const storageRefPath = storageRef(storage, `students/${studentName}-${Date.now()}`);
+                        await uploadBytes(storageRefPath, photoFile);
+                        const photoURL = await getDownloadURL(storageRefPath);
+
+                        const studentData = {
+                            studentName,
+                            studentType,
+                            photoURL,
+                            yearJoining,
+                            house,
+                            dateOfBirth,
+                            addedBy: userName
+                        };
+
+                        await set(ref(db, `students/${studentName}`), studentData);
+
+                        document.getElementById('add-student-form').reset();
+                        loadStudents();
+                    } catch (error) {
+                        console.error('Error adding student:', error);
+                    } finally {
+                        hideLoading();
+                    }
+                } else {
+                    alert('Name, type, and photo are required.');
+                }
+            });
+
+            document.getElementById('search-bar').addEventListener('input', filterStudents);
+        });
+
+        async function loadStudents() {
+            const studentsContainer = document.getElementById('students-container');
+            studentsContainer.innerHTML = '';
+
+            try {
+                const dbRef = ref(db);
+                const snapshot = await get(child(dbRef, 'students'));
+                if (snapshot.exists()) {
+                    const students = snapshot.val();
+                    const studentArray = Object.values(students);
+                    displayStudents(studentArray);
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+
+        async function displayStudents(students) {
+            const studentsContainer = document.getElementById('students-container');
+            studentsContainer.innerHTML = '';
+            for (const student of students) {
+                const reportsSnapshot = await get(child(ref(db), `students/${student.studentName}/reports`));
+                const numberOfReports = reportsSnapshot.exists() ? Object.keys(reportsSnapshot.val()).length : 0;
+                
+                const studentElement = document.createElement('div');
+                studentElement.classList.add('student');
+                studentElement.innerHTML = `
+                    <img src="${student.photoURL}" alt="${student.studentName}" width="50" height="50">
+                    <div class="details">
+                        <strong>Student:</strong> ${student.studentName}<br>
+                        <strong>Student type:</strong> ${student.studentType}<br>
+                        <strong>Number of reports:</strong> ${numberOfReports}
+                    </div>
+                    <button class="read-more">View Student</button>
+                `;
+                studentsContainer.appendChild(studentElement);
+            }
+        }
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+            const students = Array.from(document.getElementsByClassName('student'));
+            students.forEach((student) => {
+                const studentName = student.querySelector('.details strong').nextSibling.textContent.trim().toLowerCase();
+                if (studentName.startsWith(searchTerm)) {
+                    student.style.display = 'flex';
+                } else {
+                    student.style.display = 'none';
+                }
+            });
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('show');
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h2 id="welcome-message">Mr Guande Cen</h2>
+        <div>
+            <button onclick="window.location.href='Ceng.html'">Home</button>
+            <button href="https://jordanbantleman.com/Login.html" id="logout-button">Log out</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="left-panel">
+            <h2>Add a Student</h2>
+            <form id="add-student-form">
+                <label for="student-name">Name of student:</label>
+                <input type="text" id="student-name" required>
+
+                <label for="student-type">Student Type:</label>
+                <select id="student-type" required>
+                    <option value="" disabled selected>Select type</option>
+                    <option value="Day Student">Day Student</option>
+                    <option value="Boarding Student">Boarding Student</option>
+                </select>
+
+                <label for="student-photo">Upload a photo:</label>
+                <input type="file" id="student-photo" accept="image/*" required>
+
+                <h3>Additional Information (If available)</h3>
+                <label for="year-joining">Year joining Wesley:</label>
+                <input type="text" id="year-joining">
+
+                <label for="house">House:</label>
+                <input type="text" id="house">
+
+                <label for="date-of-birth">Date Of Birth:</label>
+                <input type="date" id="date-of-birth">
+
+                <input type="hidden" id="user-name">
+
+                <button type="submit">Add student</button>
+            </form>
+        </div>
+        <div class="right-panel">
+            <h2>Current Students</h2>
+            <div class="search-bar">
+                <label for="search-bar">Search:</label>
+                <input type="text" id="search-bar" placeholder="Search by name...">
+            </div>
+            <div id="students-container">
+                <!-- Students will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+</body>
+</html>

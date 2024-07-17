@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View All Reports</title>
+
+    <link href="Display Logo (no background).png" rel="icon">
+    <link href="Display Logo (no background).png" rel="apple-touch-icon">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .header button {
+            background: #119252;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .header button:hover {
+            background: #000000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filters select, .filters input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .reports-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .report {
+            background: #f9f9f9;
+            padding: 20px;
+            border-left: 5px solid #0071e3;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .report img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+
+        .report .details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .report .details strong {
+            display: block;
+        }
+
+        .report .timestamp {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .report .read-more,
+        .report .edit-report {
+            background: #333;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            align-self: flex-end;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #0071e3;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getDatabase, ref, onValue, query } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_3SwJr4tFX9rhA2s8ihmOirW-WzLBPEA",
+            authDomain: "pastoral-care-cfda2.firebaseapp.com",
+            databaseURL: "https://pastoral-care-cfda2-default-rtdb.firebaseio.com",
+            projectId: "pastoral-care-cfda2",
+            storageBucket: "pastoral-care-cfda2.appspot.com",
+            messagingSenderId: "209017266390",
+            appId: "1:209017266390:web:d81ebbc42639e65c832977",
+            measurementId: "G-SK40B5C2VR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getDatabase();
+
+        const currentUserName = "Guande Cen"; // Update this to the current user's name
+        const isAdmin = true; // Update this to true if the current user is an admin, false otherwise
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    showLoading();
+                    loadReports();
+                } else {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }
+            });
+
+            document.getElementById('logout-button').addEventListener('click', () => {
+                clearReportIdFromLocalStorage();
+                signOut(auth).then(() => {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }).catch((error) => {   
+                    console.error('Sign Out Error', error);
+                });
+            });
+
+            document.getElementById('home-button').addEventListener('click', () => {
+                clearReportIdFromLocalStorage();
+                window.location.href = 'Ceng.html';
+            });
+
+            document.getElementById('visibility-filter').addEventListener('change', loadReports);
+            document.getElementById('student-search').addEventListener('input', loadReports);
+            document.getElementById('reporter-filter').addEventListener('change', loadReports);
+            document.getElementById('date-filter').addEventListener('change', loadReports);
+        });
+
+        function clearReportIdFromLocalStorage() {
+            localStorage.removeItem('currentReportId');
+            localStorage.removeItem('currentStudentId');
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('show');
+        }
+
+        // Ensure viewReport is globally accessible
+        window.viewReport = function(studentId, reportId) {
+            localStorage.setItem('currentReportId', reportId);
+            localStorage.setItem('currentStudentId', studentId);
+            window.location.href = 'viewReport.html';
+        };
+
+        // Ensure editReport is globally accessible
+        window.editReport = function(studentId, reportId) {
+            localStorage.setItem('currentReportId', reportId);
+            localStorage.setItem('currentStudentId', studentId);
+            window.location.href = 'editReport.html';
+        };
+
+        function calculateTimeAgo(timestamp) {
+            const now = new Date();
+            const reportTime = new Date(timestamp);
+            const timeDiff = now - reportTime;
+
+            const minutes = Math.floor(timeDiff / 60000);
+            if (minutes < 60) {
+                return `${minutes} min ago`;
+            }
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) {
+                return `${hours} hrs ago`;
+            }
+            const days = Math.floor(hours / 24);
+            return `${days} days ago`;
+        }
+
+        function loadReports() {
+            const visibility = document.getElementById('visibility-filter').value;
+            const studentSearch = document.getElementById('student-search').value.toLowerCase();
+            const reporterFilter = document.getElementById('reporter-filter').value;
+            const dateFilter = document.getElementById('date-filter').value;
+            const reportsContainer = document.getElementById('reports-container');
+            reportsContainer.innerHTML = '';
+
+            const reportsQuery = query(ref(db, 'students'));
+
+            onValue(reportsQuery, (snapshot) => {
+                const reports = [];
+                snapshot.forEach(studentSnapshot => {
+                    const student = studentSnapshot.val();
+                    const studentId = studentSnapshot.key;
+                    const studentReports = student.reports;
+
+                    if (studentReports) {
+                        Object.entries(studentReports).forEach(([reportId, report]) => {
+                            const isReportVisible = isAdmin || report.reportedBy === currentUserName;
+                            if ((visibility === '' || report.visibility === visibility || (visibility === 'Private' && isReportVisible)) &&
+                                (studentSearch === '' || student.studentName.toLowerCase().includes(studentSearch)) &&
+                                (reporterFilter === '' || report.reportedBy === reporterFilter) &&
+                                (dateFilter === '' || new Date(report.dateOfOccurrence).toDateString() === new Date(dateFilter).toDateString())) {
+                                reports.push({
+                                    ...report,
+                                    studentName: student.studentName,
+                                    studentPhotoUrl: student.photoURL,
+                                    studentId: studentId,
+                                    reportId: reportId
+                                });
+                            }
+                        });
+                    }
+                });
+
+                reports.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                reports.forEach(report => {
+                    const canEdit = isAdmin || report.reportedBy === currentUserName;
+                    const reportElement = document.createElement('div');
+                    reportElement.classList.add('report');
+                    reportElement.innerHTML = `
+                        <div class="details">
+                            <img src="${report.studentPhotoUrl}" alt="${report.studentName}">
+                            <strong>Student:</strong> ${report.studentName}<br>
+                            <strong>Title of report:</strong> ${report.title}<br>
+                            <strong>Incident Category:</strong> ${report.incidentCategory}<br>
+                            <strong>Details:</strong> ${report.details}<br>
+                            <strong>Reported by:</strong> ${report.reportedBy}<br>
+                            <strong>Date of occurrence:</strong> ${report.dateOfOccurrence}
+                        </div>
+                        <div class="timestamp">${calculateTimeAgo(report.timestamp)}</div>
+                        ${canEdit ? `<button class="edit-report" onclick="editReport('${report.studentId}', '${report.reportId}')">Edit This Report</button>` : ""}
+                        <button class="read-more" onclick="viewReport('${report.studentId}', '${report.reportId}')">Read More</button>
+                    `;
+                    reportsContainer.appendChild(reportElement);
+                });
+
+                hideLoading();
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h2 id="welcome-message">Mr Guande Cen</h2>
+        <div>
+            <button id="home-button">Home</button>
+            <button id="logout-button">Log out</button>
+        </div>
+    </div>
+    <div class="container">
+        <h2>All Student Reports</h2>
+        <div class="filters">
+            <select id="visibility-filter">
+                <option value="">Select Private or Public</option>
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+            </select>
+            <input type="text" id="student-search" placeholder="Search a Student">
+            <select id="reporter-filter">
+                <option value="">Select a user:</option>
+                <option value="Jordan Bantleman">Jordan Bantleman</option>
+                <option value="Guande Cen">Guande Cen</option>
+                <option value="Luke Terri">Luke Terri</option>
+                <option value="Joshua Terri">Joshua Terri</option>
+                <option value="Hugh Chen">Hugh Chen</option>
+            </select>
+            <input type="date" id="date-filter">
+        </div>
+        <div id="reports-container" class="reports-container">
+            <!-- Reports will be dynamically loaded here -->
+        </div>
+    </div>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+</body>
+</html>

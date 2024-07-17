@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Report</title>
+
+    <link href="Display Logo (no background).png" rel="icon">
+    <link href="Display Logo (no background).png" rel="apple-touch-icon">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #bdbdbd;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .header button {
+            background: #119252;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-left: 10px;
+        }
+
+        .header button:hover {
+            background: #000000;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 40px;
+            gap: 20px;
+        }
+
+        .report-details {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 70%;
+        }
+
+        .student-details {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 25%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .student-details img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .student-details .details {
+            text-align: center;
+        }
+
+        .student-details .details strong {
+            display: block;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #0071e3;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_3SwJr4tFX9rhA2s8ihmOirW-WzLBPEA",
+            authDomain: "pastoral-care-cfda2.firebaseapp.com",
+            databaseURL: "https://pastoral-care-cfda2-default-rtdb.firebaseio.com",
+            projectId: "pastoral-care-cfda2",
+            storageBucket: "pastoral-care-cfda2.appspot.com",
+            messagingSenderId: "209017266390",
+            appId: "1:209017266390:web:d81ebbc42639e65c832977",
+            measurementId: "G-SK40B5C2VR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getDatabase();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    showLoading();
+                    loadReportDetails();
+                } else {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }
+            });
+
+            document.getElementById('logout-button').addEventListener('click', () => {
+                clearReportIdFromLocalStorage();
+                signOut(auth).then(() => {
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
+                }).catch((error) => {   
+                    console.error('Sign Out Error', error);
+                });
+            });
+
+            document.getElementById('home-button').addEventListener('click', () => {
+                clearReportIdFromLocalStorage();
+                window.location.href = 'Ceng.html';
+            });
+        });
+
+        async function loadReportDetails() {
+            const reportId = localStorage.getItem('currentReportId');
+            const studentId = localStorage.getItem('currentStudentId');
+            if (!reportId || !studentId) {
+                alert('No report or student ID found.');
+                window.location.href = 'Ceng.html';
+                return;
+            }
+
+            try {
+                const studentSnapshot = await get(child(ref(db), `students/${studentId}`));
+                if (studentSnapshot.exists()) {
+                    const student = studentSnapshot.val();
+                    const reportSnapshot = await get(child(ref(db), `students/${studentId}/reports/${reportId}`));
+                    if (reportSnapshot.exists()) {
+                        const report = reportSnapshot.val();
+                        displayReportDetails(report, reportId, student);
+                    } else {
+                        alert('Report not found.');
+                        window.location.href = 'Ceng.html';
+                    }
+                } else {
+                    alert('Student not found.');
+                    window.location.href = 'Ceng.html';
+                }
+            } catch (error) {
+                console.error('Error loading report details:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayReportDetails(report, reportId, student) {
+            document.getElementById('report-id').textContent = reportId;
+            document.getElementById('report-title').textContent = report.title;
+            document.getElementById('report-date').textContent = report.dateOfOccurrence;
+            document.getElementById('report-category').textContent = report.incidentCategory;
+            document.getElementById('report-details').textContent = report.details;
+            document.getElementById('report-reporter').textContent = report.reportedBy;
+            document.getElementById('report-severity').textContent = report.severity;
+            document.getElementById('report-class-subject').textContent = report.classSubject;
+            document.getElementById('report-additional-info').textContent = report.additionalInfo;
+
+            const studentDetails = document.getElementById('student-details');
+            studentDetails.innerHTML = `
+                <img src="${student.photoURL}" alt="${student.studentName}">
+                <div class="details">
+                    <strong>Student:</strong> ${student.studentName}<br>
+                    <strong>Student type:</strong> ${student.studentType}<br>
+                    <strong>Number of reports:</strong> ${Object.keys(student.reports).length}
+                </div>
+            `;
+        }
+
+        function clearReportIdFromLocalStorage() {
+            localStorage.removeItem('currentReportId');
+            localStorage.removeItem('currentStudentId');
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('show');
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h2 id="welcome-message">Mr Guande Cen</h2>
+        <div>
+            <button id="home-button">Home</button>
+            <button id="logout-button">Log out</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="report-details">
+            <h3>Report ID: <span id="report-id"></span></h3>
+            <h3>Title Of Report</h3>
+            <p id="report-title"></p>
+            <h3>Date of occurrence:</h3>
+            <p id="report-date"></p>
+            <h3>Incident Category:</h3>
+            <p id="report-category"></p>
+            <h3>Details:</h3>
+            <p id="report-details"></p>
+            <h3>Reported by:</h3>
+            <p id="report-reporter"></p>
+            <h3>Severity:</h3>
+            <p id="report-severity"></p>
+            <h3>Class Subject:</h3>
+            <p id="report-class-subject"></p>
+            <h3>Additional Information:</h3>
+            <p id="report-additional-info"></p>
+        </div>
+        <div class="student-details" id="student-details">
+            <!-- Student details will be dynamically loaded here -->
+        </div>
+    </div>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+</body>
+</html>
