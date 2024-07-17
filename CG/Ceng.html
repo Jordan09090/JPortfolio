@@ -238,13 +238,13 @@
                     showLoading();
                     loadReports();
                 } else {
-                    window.location.href = 'login.html';
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
                 }
             });
 
             document.getElementById('logout-button').addEventListener('click', () => {
                 signOut(auth).then(() => {
-                    window.location.href = 'login.html';
+                    window.location.href = 'https://jordanbantleman.com/Login.html';
                 }).catch((error) => {
                     console.error('Sign Out Error', error);
                 });
