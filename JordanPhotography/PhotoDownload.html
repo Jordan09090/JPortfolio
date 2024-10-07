@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jordan Photography LTD - Photo Gallery</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: none; /* Hide content until fully loaded */
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        /* Gallery Styles */
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .photo-card {
+            margin: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            width: 300px;
+        }
+
+        .photo-card:hover {
+            transform: scale(1.05);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .photo-card a {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            text-decoration: none;
+            background-color: #000000;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: background-color 0.3s ease;
+        }
+
+        .photo-card a:hover {
+            background-color: #ff6347;
+        }
+
+        /* Loader Styles */
+        #loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            z-index: 9999;
+        }
+
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #333;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div id="loader-container">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Photo Gallery -->
+    <h1>Your Photos</h1>
+    <div class="gallery">
+        <div class="photo-card">
+            <img src="Couples Portrait 1.JPG" alt="Photo 1">
+            <a href="Couples Portrait 1.JPG" download="photo1.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Couples Portrait 2.JPG" alt="Photo 2">
+            <a href="Couples Portrait 2.JPG" download="photo2.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Marie Portrait 1.JPG" alt="Photo 3">
+            <a href="Marie Portrait 1.JPG" download="photo3.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Marie Portrait 2.JPG" alt="Photo 4">
+            <a href="Marie Portrait 2.JPG" download="photo4.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Marie Portrait 3.JPG" alt="Photo 5">
+            <a href="Marie Portrait 3.JPG" download="photo5.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Rick Portrait 1.JPG" alt="Photo 6">
+            <a href="Rick Portrait 1.JPG" download="photo6.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Rick Portrait 2.JPG" alt="Photo 7">
+            <a href="Rick Portrait 2.JPG" download="photo7.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Rick Portrait 3.JPG" alt="Photo 8">
+            <a href="Rick Portrait 3.JPG" download="photo8.jpg">Download</a>
+        </div>
+        <div class="photo-card">
+            <img src="Rick Portrait 4.JPG" alt="Photo 9">
+            <a href="Rick Portrait 4.JPG" download="photo9.jpg">Download</a>
+        </div>
+    </div>
+
+    <script>
+        // Wait until all images are loaded before showing the content
+        window.onload = function () {
+            document.getElementById('loader-container').style.display = 'none'; // Hide the loader
+            document.body.style.display = 'block'; // Show the body content
+        };
+    </script>
+</body>
+</html>
