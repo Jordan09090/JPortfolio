@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Login</title>
+    <link rel="icon" type="image/x-icon" href="By Daring & By Doing.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Add subtle background gradient shapes */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            z-index: 0;
+            filter: blur(100px);
+            opacity: 0.15;
+        }
+
+        body::before {
+            background: #6a11cb;
+            top: -300px;
+            left: -300px;
+        }
+
+        body::after {
+            background: #2575fc;
+            bottom: -300px;
+            right: -300px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 420px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-header h1 {
+            color: #1d1d1f;
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.8rem;
+            color: #1d1d1f;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 1.5px solid #e1e1e1;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus {
+            border-color: #2575fc;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 117, 252, 0.1);
+        }
+
+        .password-group {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #2575fc, #6a11cb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(37, 117, 252, 0.2);
+        }
+
+        .login-btn:active {
+            transform: translateY(1px);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #ff3b30;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.75rem;
+            background-color: rgba(255, 59, 48, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .error-message:not(:empty) {
+            display: block;
+        }
+
+        .eye-icon {
+            width: 20px;
+            height: 20px;
+            stroke-width: 1.5;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Barista Login</h1>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-group">
+                    <input type="password" id="password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrnqJIS84ZmBylRBYNrDRg8FwRNmkfLwQ",
+            authDomain: "barista-f1e71.firebaseapp.com",
+            databaseURL: "https://barista-f1e71-default-rtdb.firebaseio.com",
+            projectId: "barista-f1e71",
+            storageBucket: "barista-f1e71.firebasestorage.app",
+            messagingSenderId: "169547083412",
+            appId: "1:169547083412:web:991d2e52ed46e8b023ce81",
+            measurementId: "G-QR1NHK2J1R"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Check if already logged in
+        const savedUID = sessionStorage.getItem('baristaAuth');
+        if (savedUID === 'LYUuiTri11cwURkVehdc6x1Zw0U2') {
+            window.location.href = 'take-orders.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Login attempt started');
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loginBtn = document.querySelector('.login-btn');
+            
+            try {
+                loginBtn.textContent = 'Logging in...';
+                loginBtn.disabled = true;
+                
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login successful:', userCredential);
+                
+                // Store auth state
+                sessionStorage.setItem('userLoggedIn', 'true');
+                
+                // Redirect to orders page
+                window.location.href = 'take-orders.html';
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Convert Firebase errors to user-friendly messages
+                let friendlyMessage;
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        friendlyMessage = 'Please enter a valid email address';
+                        break;
+                    case 'auth/user-not-found':
+                        friendlyMessage = 'No account found with this email';
+                        break;
+                    case 'auth/wrong-password':
+                        friendlyMessage = 'Incorrect password. Please try again';
+                        break;
+                    case 'auth/too-many-requests':
+                        friendlyMessage = 'Too many failed attempts. Please try again later';
+                        break;
+                    case 'auth/network-request-failed':
+                        friendlyMessage = 'Network error. Please check your internet connection';
+                        break;
+                    default:
+                        friendlyMessage = 'Sorry, Wrong Email or Password.';
+                }
+                
+                errorMessage.textContent = friendlyMessage;
+                loginBtn.textContent = 'Login';
+                loginBtn.disabled = false;
+                
+                // Add shake animation to the form
+                document.querySelector('.login-container').classList.add('shake');
+                setTimeout(() => {
+                    document.querySelector('.login-container').classList.remove('shake');
+                }, 400);
+            }
+        });
+    </script>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.querySelector('.eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                `;
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

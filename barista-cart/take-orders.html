@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Cart</title>
+    <link rel="icon" type="image/x-icon" href="By Daring & By Doing.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-title {
+            font-size: 1.5rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .portal-btn {
+            background-color: #4CAF50;
+        }
+
+        .view-btn {
+            background-color: #2196F3;
+        }
+
+        .logout-btn {
+            background-color: #f44336;
+        }
+
+        .finance-btn {
+            background-color: #9C27B0;
+        }
+
+        .page-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .order-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .coffee-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .coffee-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .coffee-btn:hover {
+            border-color: #2196F3;
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .coffee-btn.selected {
+            background-color: white;
+            color: #2196F3;
+            border: 2px solid #2196F3;
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+        }
+
+        .current-order {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .place-order-btn {
+            order: 2;
+            width: 100%;
+            padding: 1rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .place-order-btn:hover {
+            background: #45a049;
+        }
+
+        .order-number {
+            margin-bottom: 20px;
+        }
+
+        .order-number input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .copyright {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .order-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .number-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .number-control button {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .number-control span {
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .milk-options, .extra-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .special-instructions textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            resize: vertical;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #1976D2;
+        }
+
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .alert-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .alert-content p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .alert-content button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            min-width: 100px;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .confirm-buttons button:first-child {
+            background: #4CAF50;
+        }
+
+        .confirm-buttons button:last-child {
+            background: #f44336;
+        }
+
+        .success .alert-content {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .macchiato-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .other-coffee {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .other-coffee input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 1rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+            z-index: 1;
+        }
+
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .close-btn::before,
+        .close-btn::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 2px;
+            background-color: #666;
+        }
+
+        .close-btn::before {
+            transform: rotate(45deg);
+        }
+
+        .close-btn::after {
+            transform: rotate(-45deg);
+        }
+
+        .modify-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modify-options button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            min-width: 100px;
+        }
+
+        .edit-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .remove-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .order-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: right;
+            order: 3;
+        }
+
+        .payment-received {
+            background: #4CAF50 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .payment-declined {
+            background: #f44336 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .confirm-buttons button {
+            padding: 10px 20px;
+            min-width: 150px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .confirm-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .confirm-buttons button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .payment-card {
+            background: #2196F3 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .payment-cash {
+            background: #4CAF50 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .payment-cancel {
+            background: #f44336 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .cash-input-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .cash-input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .cash-input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1.1rem;
+        }
+
+        #changeAmount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .payment-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .payment-method-btn {
+            background: #4CAF50 !important;
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+
+        .payment-method-btn:hover {
+            opacity: 0.9;
+        }
+
+        .cancel-btn {
+            background: #f44336 !important;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .cash-details {
+            margin: 20px 0;
+        }
+
+        .total-amount {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .cash-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 10px;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .cash-input-group input {
+            padding-left: 25px;
+        }
+
+        .change-amount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .change-amount.positive {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .change-amount.negative {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .cash-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cash-input-section {
+            margin-top: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .cash-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .cash-input-wrapper input {
+            width: 100%;
+            padding: 12px 15px 12px 30px;
+            font-size: 1.2rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .cash-input-wrapper input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #666;
+            pointer-events: none;
+        }
+
+        .change-message {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #2e7d32;
+            margin: 20px 0;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cash-amount-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2e7d32;
+            border: 2px solid #e0e0e0;
+        }
+
+        .cash-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .cash-amount-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cash-amount-btn[onclick*="0."] {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .cash-amount-btn[onclick*="0."]:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
+        }
+
+        .cash-amount-btn[onclick*="(1)"],
+        .cash-amount-btn[onclick*="(5)"],
+        .cash-amount-btn[onclick*="(10)"],
+        .cash-amount-btn[onclick*="(20)"],
+        .cash-amount-btn[onclick*="(50)"] {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .cash-amount-btn[onclick*="(1)"]:hover,
+        .cash-amount-btn[onclick*="(5)"]:hover,
+        .cash-amount-btn[onclick*="(10)"]:hover,
+        .cash-amount-btn[onclick*="(20)"]:hover,
+        .cash-amount-btn[onclick*="(50)"]:hover {
+            background: #c8e6c9;
+            transform: translateY(-2px);
+        }
+
+        .cash-amount-btn.reset {
+            background: #ffebee;
+            color: #c62828;
+            grid-column: span 3;
+        }
+
+        .cash-amount-btn.reset:hover {
+            background: #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-title">Coffee Cart</div>
+        <div class="nav-buttons">
+            <button class="nav-btn portal-btn">Barista Portal</button>
+            <button class="nav-btn finance-btn" onclick="window.location.href='finance-view.html'">Finance View</button>
+            <button class="nav-btn logout-btn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="order-section">
+            <h2 class="section-title">New Order</h2>
+            <div class="coffee-grid">
+                <button class="coffee-btn">Flat White</button>
+                <button class="coffee-btn">Cappuccino</button>
+                <button class="coffee-btn">Short Black</button>
+                <button class="coffee-btn">Long Black</button>
+                <button class="coffee-btn">Americano</button>
+                <button class="coffee-btn">Latte</button>
+                <button class="coffee-btn">Espresso</button>
+                <button class="coffee-btn">Macchiato</button>
+                <button class="coffee-btn">Mocha</button>
+                <button class="coffee-btn">Iced Coffee/Latte</button>
+                <button class="coffee-btn">Hot Chocolate</button>
+                <button class="coffee-btn">Other</button>
+            </div>
+        </div>
+
+        <div class="current-order">
+            <h2 class="section-title">Current Order</h2>
+            <div class="order-number">
+                <input type="number" placeholder="Order Number" min="1" max="999">
+            </div>
+            <div id="orderDetails">
+                <!-- Order details will be displayed here -->
+            </div>
+            <button class="place-order-btn">Place Order</button>
+        </div>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('orderModal')"></button>
+            <h2 id="modalTitle">Flat White</h2>
+            
+            <div class="order-options">
+                <div class="quantity-section">
+                    <label>Quantity</label>
+                    <div class="number-control">
+                        <button type="button" onclick="adjustQuantity(-1)">-</button>
+                        <span id="quantityDisplay">1</span>
+                        <button type="button" onclick="adjustQuantity(1)">+</button>
+                    </div>
+                </div>
+
+                <div class="sugar-section">
+                    <label>Sugar</label>
+                    <div class="number-control">
+                        <button type="button" onclick="adjustSugar(-1)">-</button>
+                        <span id="sugarDisplay">0</span>
+                        <button type="button" onclick="adjustSugar(1)">+</button>
+                    </div>
+                </div>
+
+                <div class="milk-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="fullCream">
+                        <label for="fullCream">Full Cream</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="almond">
+                        <label for="almond">Almond</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="oat">
+                        <label for="oat">Oat</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="soy">
+                        <label for="soy">Soy</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="skim">
+                        <label for="skim">Skim</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="lactose">
+                        <label for="lactose">Lactose Free</label>
+                    </div>
+                </div>
+
+                <div class="extra-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="extraHot">
+                        <label for="extraHot">Extra Hot</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="doubleShot">
+                        <label for="doubleShot">Double Shot</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="halfStrength">
+                        <label for="halfStrength">Half Strength</label>
+                    </div>
+                </div>
+
+                <div id="macchiatoOptions" class="macchiato-options" style="display: none;">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="toppedUp">
+                        <label for="toppedUp">Topped Up</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="short">
+                        <label for="short">Short</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="long">
+                        <label for="long">Long</label>
+                    </div>
+                </div>
+
+                <div id="otherCoffeeInput" class="other-coffee" style="display: none;">
+                    <label>Coffee Name</label>
+                    <input type="text" id="customCoffeeName" placeholder="Enter coffee name">
+                </div>
+
+                <div class="special-instructions">
+                    <label>Other</label>
+                    <textarea id="specialInstructions" rows="3"></textarea>
+                </div>
+            </div>
+
+            <button id="addToCart" class="add-to-cart-btn">Add to cart</button>
+        </div>
+    </div>
+
+    <div id="modifyModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('modifyModal')"></button>
+            <h2>Modify Order</h2>
+            <div class="modify-options">
+                <button class="edit-btn" onclick="editOrderItem()">Edit</button>
+                <button class="remove-btn" onclick="removeOrderItem()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="copyright">
+        © 2025 Jordan Bartleman v2
+    </div>
+
+    <div id="customAlert" class="custom-alert">
+        <div class="alert-content">
+            <p id="alertMessage"></p>
+            <button onclick="closeAlert()">OK</button>
+        </div>
+    </div>
+
+    <div id="confirmDialog" class="custom-alert">
+        <div class="alert-content">
+            <h3>Payment Method</h3>
+            <p id="totalAmount"></p>
+            <div class="payment-buttons">
+                <button id="cardPaymentBtn" onclick="confirmOrder('card')" class="payment-method-btn">
+                    <span class="button-content">
+                        Pay by Card
+                        <span class="loading-spinner" style="display: none;"></span>
+                    </span>
+                </button>
+                <button id="cashPaymentBtn" onclick="showCashInput()" class="payment-method-btn">
+                    Pay by Cash
+                </button>
+            </div>
+            <div id="cashInputSection" style="display: none;" class="cash-input-section">
+                <div class="cash-amount-display">
+                    <span>Cash Received: </span>
+                    <span class="currency-symbol">$</span>
+                    <span id="cashAmountDisplay">0.00</span>
+                </div>
+                <div class="cash-buttons-grid">
+                    <button onclick="addCashAmount(0.05)" class="cash-amount-btn">5 ¢</button>
+                    <button onclick="addCashAmount(0.10)" class="cash-amount-btn">10 ¢</button>
+                    <button onclick="addCashAmount(0.20)" class="cash-amount-btn">20 ¢</button>
+                    <button onclick="addCashAmount(0.50)" class="cash-amount-btn">50 ¢</button>
+                    <button onclick="addCashAmount(1)" class="cash-amount-btn">$1</button>
+                    <button onclick="addCashAmount(5)" class="cash-amount-btn">$5</button>
+                    <button onclick="addCashAmount(10)" class="cash-amount-btn">$10</button>
+                    <button onclick="addCashAmount(20)" class="cash-amount-btn">$20</button>
+                    <button onclick="addCashAmount(50)" class="cash-amount-btn">$50</button>
+                    <button onclick="resetCashAmount()" class="cash-amount-btn reset">Clear</button>
+                </div>
+                <button id="cashContinueBtn" onclick="processCashPayment()" class="payment-method-btn">
+                    <span class="button-content">
+                        Continue
+                        <span class="loading-spinner" style="display: none;"></span>
+                    </span>
+                </button>
+            </div>
+            <button onclick="closeModal('confirmDialog')" class="cancel-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="changeAlert" class="custom-alert success">
+        <div class="alert-content">
+            <h3>Payment Complete</h3>
+            <p id="changeMessage" class="change-message"></p>
+            <button onclick="finishCashPayment()" class="payment-method-btn">OK</button>
+        </div>
+    </div>
+
+    <div id="successAlert" class="custom-alert success">
+        <div class="alert-content">
+            <p>Order placed successfully!</p>
+            <button onclick="closeAlert()" class="payment-method-btn">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules for Realtime Database
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, push, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase configuration - Make sure databaseURL is correct
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrnqJIS84ZmBylRBYNrDRg8FwRNmkfLwQ",
+            authDomain: "barista-f1e71.firebaseapp.com",
+            databaseURL: "https://barista-f1e71-default-rtdb.firebaseio.com",
+            projectId: "barista-f1e71",
+            storageBucket: "barista-f1e71.firebasestorage.app",
+            messagingSenderId: "169547083412",
+            appId: "1:169547083412:web:991d2e52ed46e8b023ce81",
+            measurementId: "G-QR1NHK2J1R"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase();  // Remove app parameter
+
+        class CoffeeOrder {
+            constructor() {
+                this.orders = [];
+                this.isEditing = false;
+                this.editIndex = -1;
+                this.PRICE_PER_COFFEE = 3;
+                this.currentOrderNumber = parseInt(localStorage.getItem('lastOrderNumber') || '0');
+                
+                this.loadSavedOrders();
+                this.setupEventListeners();
+            }
+
+            loadSavedOrders() {
+                const saved = localStorage.getItem('currentOrders');
+                if (saved) {
+                    this.orders = JSON.parse(saved);
+                    this.displayOrders();
+                }
+            }
+
+            setupEventListeners() {
+                // Coffee selection
+                document.querySelectorAll('.coffee-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (!this.isEditing) {
+                            this.resetForm();
+                        }
+                        this.selectCoffee(btn.textContent);
+                    });
+                });
+
+                // Add to cart
+                document.getElementById('addToCart').addEventListener('click', () => this.addToCart());
+
+                // Place order button
+                document.querySelector('.place-order-btn').addEventListener('click', () => {
+                    if (this.orders.length === 0) {
+                        this.showAlert('Please add items to your order');
+                        return;
+                    }
+                    
+                    const orderNumber = document.querySelector('.order-number input').value;
+                    if (!orderNumber) {
+                        this.showAlert('Please enter an order number');
+                        return;
+                    }
+
+                    this.showConfirmDialog();
+                });
+
+                // Navigation
+                document.querySelector('.portal-btn').addEventListener('click', () => {
+                    window.location.href = 'barista-view.html';
+                });
+
+                document.querySelector('.logout-btn').addEventListener('click', () => {
+                    window.location.href = 'login.html';
+                });
+
+                // Update order number input listener to not increment
+                document.querySelector('.order-number input').addEventListener('change', (e) => {
+                    const newOrderNumber = parseInt(e.target.value) || 0;
+                    this.currentOrderNumber = newOrderNumber - 1; // Subtract 1 because handlePayment will add 1
+                    localStorage.setItem('lastOrderNumber', this.currentOrderNumber.toString());
+                });
+
+                // Set initial order number
+                document.querySelector('.order-number input').value = this.currentOrderNumber + 1;
+            }
+
+            selectCoffee(coffeeName) {
+                document.querySelectorAll('.coffee-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (btn.textContent === coffeeName) {
+                        btn.classList.add('selected');
+                    }
+                });
+
+                document.getElementById('modalTitle').textContent = coffeeName;
+                document.getElementById('macchiatoOptions').style.display = 
+                    coffeeName === 'Macchiato' ? 'grid' : 'none';
+                document.getElementById('otherCoffeeInput').style.display = 
+                    coffeeName === 'Other' ? 'block' : 'none';
+                
+                document.getElementById('orderModal').style.display = 'block';
+            }
+
+            addToCart() {
+                const orderDetails = this.getOrderDetails();
+                if (!orderDetails) return;
+
+                if (this.isEditing && this.editIndex !== -1) {
+                    this.orders[this.editIndex] = orderDetails;
+                } else {
+                    this.orders.push(orderDetails);
+                }
+
+                this.saveOrders();
+                this.displayOrders();
+                this.closeModal('orderModal');
+                this.resetForm();
+            }
+
+            resetForm() {
+                this.isEditing = false;
+                this.editIndex = -1;
+                
+                // Clear all inputs
+                document.getElementById('specialInstructions').value = '';
+                document.getElementById('customCoffeeName').value = '';
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                document.getElementById('quantityDisplay').textContent = '1';
+                document.getElementById('sugarDisplay').textContent = '0';
+                
+                // Hide special sections
+                document.getElementById('macchiatoOptions').style.display = 'none';
+                document.getElementById('otherCoffeeInput').style.display = 'none';
+                
+                // Clear coffee selection
+                document.querySelectorAll('.coffee-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+            }
+
+            showModifyOptions(index) {
+                this.editIndex = index;
+                document.getElementById('modifyModal').style.display = 'block';
+            }
+
+            editOrder() {
+                if (this.editIndex === -1) return;
+                
+                this.isEditing = true;
+                const orderToEdit = this.orders[this.editIndex];
+                
+                this.selectCoffee(orderToEdit.coffee);
+                this.populateForm(orderToEdit);
+                
+                this.closeModal('modifyModal');
+            }
+
+            removeOrder() {
+                if (this.editIndex === -1) return;
+                
+                this.orders.splice(this.editIndex, 1);
+                this.saveOrders();
+                this.displayOrders();
+                this.closeModal('modifyModal');
+                this.resetForm();
+            }
+
+            populateForm(order) {
+                document.getElementById('quantityDisplay').textContent = order.quantity;
+                document.getElementById('sugarDisplay').textContent = order.sugar;
+                
+                // Reset checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                // Set milk options
+                Object.entries(order.milk).forEach(([type, checked]) => {
+                    const checkbox = document.getElementById(type);
+                    if (checkbox) checkbox.checked = checked;
+                });
+
+                // Set other options
+                document.getElementById('extraHot').checked = order.extraHot || false;
+                document.getElementById('doubleShot').checked = order.doubleShot || false;
+                document.getElementById('halfStrength').checked = order.halfStrength || false;
+                document.getElementById('specialInstructions').value = order.specialInstructions || '';
+
+                if (order.coffee === 'Macchiato') {
+                    document.getElementById('toppedUp').checked = order.toppedUp || false;
+                    document.getElementById('short').checked = order.short || false;
+                    document.getElementById('long').checked = order.long || false;
+                }
+            }
+
+            getOrderDetails() {
+                const coffeeName = document.getElementById('modalTitle').textContent;
+                if (coffeeName === 'Other') {
+                    const customName = document.getElementById('customCoffeeName').value.trim();
+                    if (!customName) {
+                        this.showAlert('Please enter a coffee name');
+                        return null;
+                    }
+                    return this.createOrderObject(customName);
+                }
+                return this.createOrderObject(coffeeName);
+            }
+
+            createOrderObject(coffeeName) {
+                return {
+                    coffee: coffeeName,
+                    quantity: document.getElementById('quantityDisplay').textContent,
+                    sugar: document.getElementById('sugarDisplay').textContent,
+                    milk: {
+                        fullCream: document.getElementById('fullCream').checked,
+                        almond: document.getElementById('almond').checked,
+                        oat: document.getElementById('oat').checked,
+                        soy: document.getElementById('soy').checked,
+                        skim: document.getElementById('skim').checked,
+                        lactose: document.getElementById('lactose').checked
+                    },
+                    extraHot: document.getElementById('extraHot').checked,
+                    doubleShot: document.getElementById('doubleShot').checked,
+                    halfStrength: document.getElementById('halfStrength').checked,
+                    toppedUp: document.getElementById('toppedUp')?.checked || false,
+                    short: document.getElementById('short')?.checked || false,
+                    long: document.getElementById('long')?.checked || false,
+                    specialInstructions: document.getElementById('specialInstructions').value.trim()
+                };
+            }
+
+            displayOrders() {
+                const orderDetailsDiv = document.getElementById('orderDetails');
+                orderDetailsDiv.innerHTML = '';
+
+                this.orders.forEach((order, index) => {
+                    const orderElement = this.createOrderElement(order, index);
+                    orderDetailsDiv.appendChild(orderElement);
+                });
+
+                this.updateTotal();
+            }
+
+            createOrderElement(order, index) {
+                const div = document.createElement('div');
+                div.className = 'order-item';
+                
+                const milkTypes = Object.entries(order.milk)
+                    .filter(([_, checked]) => checked)
+                    .map(([type]) => type)
+                    .join(', ');
+
+                div.innerHTML = `
+                    <p><strong>${order.quantity}x ${order.coffee}</strong></p>
+                    ${milkTypes ? `<p>Milk: ${milkTypes}</p>` : ''}
+                    ${order.sugar > 0 ? `<p>Sugar: ${order.sugar}</p>` : ''}
+                    ${order.extraHot ? '<p>Extra Hot</p>' : ''}
+                    ${order.doubleShot ? '<p>Double Shot</p>' : ''}
+                    ${order.halfStrength ? '<p>Half Strength</p>' : ''}
+                    ${order.toppedUp ? '<p>Topped Up</p>' : ''}
+                    ${order.short ? '<p>Short</p>' : ''}
+                    ${order.long ? '<p>Long</p>' : ''}
+                    ${order.specialInstructions ? `<p>Special: ${order.specialInstructions}</p>` : ''}
+                    <button class="modify-btn" onclick="window.coffeeOrder.showModifyOptions(${index})">Modify</button>
+                `;
+
+                return div;
+            }
+
+            updateTotal() {
+                const total = this.orders.reduce((sum, order) => {
+                    return sum + (parseInt(order.quantity) * this.PRICE_PER_COFFEE);
+                }, 0);
+
+                let totalDiv = document.querySelector('.order-total');
+                if (!totalDiv) {
+                    totalDiv = document.createElement('div');
+                    totalDiv.className = 'order-total';
+                    document.querySelector('.current-order').appendChild(totalDiv);
+                }
+                totalDiv.textContent = `Total: $${total.toFixed(2)}`;
+            }
+
+            saveOrders() {
+                localStorage.setItem('currentOrders', JSON.stringify(this.orders));
+            }
+
+            showAlert(message) {
+                const alert = document.getElementById('customAlert');
+                document.getElementById('alertMessage').textContent = message;
+                alert.style.display = 'flex';
+            }
+
+            closeModal(modalId) {
+                document.getElementById(modalId).style.display = 'none';
+                if (modalId === 'orderModal' && !this.isEditing) {
+                    this.resetForm();
+                }
+            }
+
+            showConfirmDialog() {
+                const total = this.orders.reduce((sum, order) => {
+                    return sum + (parseInt(order.quantity) * this.PRICE_PER_COFFEE);
+                }, 0);
+
+                const confirmDialog = document.getElementById('confirmDialog');
+                const message = confirmDialog.querySelector('#totalAmount');
+                message.textContent = `Total Amount: $${total.toFixed(2)}`;
+                
+                // Reset all states
+                document.getElementById('cashInputSection').style.display = 'none';
+                document.getElementById('cashAmountDisplay').textContent = '0.00';
+                document.getElementById('cardPaymentBtn').disabled = false;
+                document.getElementById('cashPaymentBtn').disabled = false;
+                document.getElementById('cardPaymentBtn').querySelector('.loading-spinner').style.display = 'none';
+                
+                confirmDialog.style.display = 'flex';
+            }
+
+            async confirmOrder(paymentType) {
+                if (paymentType === 'card') {
+                    await this.handlePayment('card');
+                }
+            }
+
+            async handlePayment(paymentType) {
+                let btnId = paymentType === 'card' ? 'cardPaymentBtn' : 'completeCashBtn';
+                let btn = null;
+                let spinner = null;
+
+                try {
+                    // Get the button and spinner based on payment type
+                    btn = document.getElementById(btnId);
+                    spinner = btn?.querySelector('.loading-spinner');
+
+                    // Disable button and show spinner if they exist
+                    if (btn) btn.disabled = true;
+                    if (spinner) spinner.style.display = 'inline-block';
+                    
+                    // Get the order total
+                    const total = this.orders.reduce((sum, order) => 
+                        sum + (parseInt(order.quantity) * this.PRICE_PER_COFFEE), 0);
+
+                    // Get current finance data
+                    const financeRef = ref(database, 'finance/current');
+                    const financeSnapshot = await get(financeRef);
+                    const financeData = financeSnapshot.val() || { cardPayments: 0, cashPayments: 0 };
+
+                    // Update finance data
+                    if (paymentType === 'card') {
+                        financeData.cardPayments += total;
+                    } else {
+                        financeData.cashPayments += total;
+                    }
+
+                    // Create order data
+                    const orderData = {
+                        number: parseInt(document.querySelector('.order-number input').value),
+                        timestamp: Date.now(),
+                        status: 'pending',
+                        items: this.orders,
+                        total: total,
+                        paymentType: paymentType
+                    };
+
+                    // Generate a new order key and save everything
+                    const newOrderRef = push(ref(database, 'orders')).key;
+                    const updates = {
+                        [`orders/${newOrderRef}`]: orderData,
+                        'finance/current': financeData
+                    };
+                    
+                    await update(ref(database), updates);
+
+                    // Clear UI and update state
+                    this.orders = [];
+                    this.saveOrders();
+                    this.displayOrders();
+                    
+                    // Update order number
+                    this.currentOrderNumber = parseInt(document.querySelector('.order-number input').value);
+                    localStorage.setItem('lastOrderNumber', this.currentOrderNumber.toString());
+                    document.querySelector('.order-number input').value = this.currentOrderNumber + 1;
+
+                    // Hide confirm dialog
+                    const confirmDialog = document.getElementById('confirmDialog');
+                    if (confirmDialog) confirmDialog.style.display = 'none';
+
+                    // Show appropriate success message
+                    if (paymentType === 'card') {
+                        const successAlert = document.getElementById('successAlert');
+                        if (successAlert) {
+                            successAlert.style.display = 'flex';
+                            setTimeout(() => successAlert.style.display = 'none', 3000);
+                        }
+                    }
+
+                    return true; // Payment successful
+
+                } catch (error) {
+                    console.error('Error processing payment:', error);
+                    this.showAlert('Failed to process payment: ' + error.message);
+                    return false; // Payment failed
+                } finally {
+                    // Reset UI elements if they exist
+                    if (btn) btn.disabled = false;
+                    if (spinner) spinner.style.display = 'none';
+                }
+            }
+        }
+
+        // Initialize globally
+        window.coffeeOrder = new CoffeeOrder();
+
+        // Global functions
+        window.adjustQuantity = function(change) {
+            const display = document.getElementById('quantityDisplay');
+            let value = parseInt(display.textContent);
+            value = Math.max(1, Math.min(10, value + change));
+            display.textContent = value;
+        };
+
+        window.adjustSugar = function(change) {
+            const display = document.getElementById('sugarDisplay');
+            let value = parseInt(display.textContent);
+            value = Math.max(0, Math.min(6, value + change));
+            display.textContent = value;
+        };
+
+        window.showModifyOptions = (index) => window.coffeeOrder.showModifyOptions(index);
+        window.editOrderItem = () => window.coffeeOrder.editOrder();
+        window.removeOrderItem = () => window.coffeeOrder.removeOrder();
+        window.closeModal = (modalId) => window.coffeeOrder.closeModal(modalId);
+        window.confirmOrder = (paymentType) => window.coffeeOrder.confirmOrder(paymentType);
+        window.closeAlert = () => {
+            document.getElementById('customAlert').style.display = 'none';
+            document.getElementById('successAlert').style.display = 'none';
+        };
+
+        window.showCashInput = function() {
+            const cashInputSection = document.getElementById('cashInputSection');
+            cashInputSection.style.display = 'block';
+            resetCashAmount();
+        };
+
+        window.processCashPayment = async function() {
+            const continueBtn = document.getElementById('cashContinueBtn');
+            const spinner = continueBtn.querySelector('.loading-spinner');
+            
+            try {
+                // Disable button and show spinner
+                continueBtn.disabled = true;
+                spinner.style.display = 'inline-block';
+
+                const total = window.coffeeOrder.orders.reduce((sum, order) => 
+                    sum + (parseInt(order.quantity) * window.coffeeOrder.PRICE_PER_COFFEE), 0);
+                
+                const cashReceived = parseFloat(document.getElementById('cashAmountDisplay').textContent) || 0;
+                
+                if (cashReceived < total) {
+                    window.coffeeOrder.showAlert('Insufficient payment amount');
+                    return;
+                }
+
+                const change = cashReceived - total;
+                
+                // Process the payment
+                const success = await window.coffeeOrder.handlePayment('cash');
+                
+                if (success) {
+                    // Show change message
+                    document.getElementById('confirmDialog').style.display = 'none';
+                    const changeAlert = document.getElementById('changeAlert');
+                    document.getElementById('changeMessage').textContent = 
+                        change > 0 ? `Please give change: $${change.toFixed(2)}` : 'No change needed';
+                    changeAlert.style.display = 'flex';
+                }
+            } catch (error) {
+                window.coffeeOrder.showAlert('Failed to process payment: ' + error.message);
+            } finally {
+                // Re-enable button and hide spinner
+                continueBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        };
+
+        window.finishCashPayment = function() {
+            document.getElementById('changeAlert').style.display = 'none';
+            document.getElementById('cashInputSection').style.display = 'none';
+            document.getElementById('cashAmountDisplay').textContent = '0.00';
+            
+            // Show final success message
+            const successAlert = document.getElementById('successAlert');
+            successAlert.style.display = 'flex';
+            setTimeout(() => successAlert.style.display = 'none', 3000);
+        };
+
+        window.addCashAmount = function(amount) {
+            const display = document.getElementById('cashAmountDisplay');
+            const currentAmount = parseFloat(display.textContent) || 0;
+            display.textContent = (currentAmount + amount).toFixed(2);
+        };
+
+        window.resetCashAmount = function() {
+            document.getElementById('cashAmountDisplay').textContent = '0.00';
+        };
+    </script>
+</body>
+</html> 
