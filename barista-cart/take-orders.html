@@ -720,6 +720,87 @@
         .cash-amount-btn.reset:hover {
             background: #ffcdd2;
         }
+
+        .name-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        .shots-section {
+            margin-bottom: 15px;
+        }
+
+        #totalAmount {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        #totalAmount p {
+            margin: 10px 0;
+        }
+
+        #totalAmount p:first-child {
+            color: #333;
+            font-weight: bold;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            min-width: 150px;
+            border: 1px solid #ddd;
+        }
+
+        .update-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            transform: none;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-width: 400px;
+            border-left: 4px solid #2196F3;
+            display: none;
+        }
+
+        .update-notification h3 {
+            margin: 0 0 15px 0;
+            color: #1976D2;
+        }
+
+        .update-notification ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .update-notification li {
+            margin: 8px 0;
+            color: #333;
+        }
+
+        .close-update-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .close-update-btn:hover {
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -745,7 +826,7 @@
                 <button class="coffee-btn">Espresso</button>
                 <button class="coffee-btn">Macchiato</button>
                 <button class="coffee-btn">Mocha</button>
-                <button class="coffee-btn">Iced Coffee/Latte</button>
+                <button class="coffee-btn">Chai Latte</button>
                 <button class="coffee-btn">Hot Chocolate</button>
                 <button class="coffee-btn">Other</button>
             </div>
@@ -778,6 +859,15 @@
                     </div>
                 </div>
 
+                <div class="shots-section">
+                    <label>Add Shots (Already comes with 2)</label>
+                    <div class="number-control">
+                        <button type="button" onclick="adjustShots(-1)">-</button>
+                        <span id="shotsDisplay">0</span>
+                        <button type="button" onclick="adjustShots(1)">+</button>
+                    </div>
+                </div>
+
                 <div class="sugar-section">
                     <label>Sugar</label>
                     <div class="number-control">
@@ -785,6 +875,11 @@
                         <span id="sugarDisplay">0</span>
                         <button type="button" onclick="adjustSugar(1)">+</button>
                     </div>
+                </div>
+
+                <div class="name-input" style="margin-bottom: 15px;">
+                    <label>Name</label>
+                    <input type="text" id="customerName" placeholder="Enter customer name">
                 </div>
 
                 <div class="milk-options">
@@ -818,10 +913,6 @@
                     <div class="checkbox-group">
                         <input type="checkbox" id="extraHot">
                         <label for="extraHot">Extra Hot</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="doubleShot">
-                        <label for="doubleShot">Double Shot</label>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="halfStrength">
@@ -871,7 +962,7 @@
     </div>
 
     <div class="copyright">
-        © 2025 Jordan Bartleman v2
+        © 2025 Jordan Bartleman v4
     </div>
 
     <div id="customAlert" class="custom-alert">
@@ -940,10 +1031,23 @@
         </div>
     </div>
 
+    <div id="updateNotification" class="update-notification">
+        <button class="close-update-btn" onclick="dismissUpdate()">&times;</button>
+        <h3>🎉 New Updates! (Version 4)</h3>
+        <ul>
+            <li>Added customer name field to orders</li>
+            <li>Changed "Iced Coffee" to "Chai Latte"</li>
+            <li>Simplified shot selection - You can now add the number of shots they want.</li>
+            <li>Improved order code display in Barista View</li>
+            <li>Enhanced finance graph exports with totals and subtotals</li>
+        </ul>
+    </div>
+
     <script type="module">
         // Import Firebase modules for Realtime Database
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, push, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // Firebase configuration - Make sure databaseURL is correct
         const firebaseConfig = {
@@ -959,7 +1063,28 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase();  // Remove app parameter
+        const auth = getAuth(app);
+        const database = getDatabase();
+
+        // Add this authentication check at the start
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                // No user is signed in, redirect to login
+                window.location.href = 'login.html';
+                return;
+            }
+        });
+
+        // Move the CoffeeOrder class initialization inside the auth check
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Initialize the coffee order system only if authenticated
+            window.coffeeOrder = new CoffeeOrder();
+        });
 
         class CoffeeOrder {
             constructor() {
@@ -969,6 +1094,10 @@
                 this.PRICE_PER_COFFEE = 3;
                 this.currentOrderNumber = parseInt(localStorage.getItem('lastOrderNumber') || '0');
                 
+                // Add auth check before loading saved orders
+                if (!auth.currentUser) {
+                    return;
+                }
                 this.loadSavedOrders();
                 this.setupEventListeners();
             }
@@ -1071,11 +1200,13 @@
                 // Clear all inputs
                 document.getElementById('specialInstructions').value = '';
                 document.getElementById('customCoffeeName').value = '';
+                document.getElementById('customerName').value = '';
                 document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                     checkbox.checked = false;
                 });
                 document.getElementById('quantityDisplay').textContent = '1';
                 document.getElementById('sugarDisplay').textContent = '0';
+                document.getElementById('shotsDisplay').textContent = '0';
                 
                 // Hide special sections
                 document.getElementById('macchiatoOptions').style.display = 'none';
@@ -1117,6 +1248,12 @@
             populateForm(order) {
                 document.getElementById('quantityDisplay').textContent = order.quantity;
                 document.getElementById('sugarDisplay').textContent = order.sugar;
+                document.getElementById('shotsDisplay').textContent = order.additionalShots || '0';
+                document.getElementById('customerName').value = order.customerName || '';
+                
+                if (order.coffee === 'Other') {
+                    document.getElementById('customCoffeeName').value = order.coffee;
+                }
                 
                 // Reset checkboxes
                 document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
@@ -1131,7 +1268,6 @@
 
                 // Set other options
                 document.getElementById('extraHot').checked = order.extraHot || false;
-                document.getElementById('doubleShot').checked = order.doubleShot || false;
                 document.getElementById('halfStrength').checked = order.halfStrength || false;
                 document.getElementById('specialInstructions').value = order.specialInstructions || '';
 
@@ -1156,10 +1292,13 @@
             }
 
             createOrderObject(coffeeName) {
+                const additionalShots = parseInt(document.getElementById('shotsDisplay').textContent) || 0;
                 return {
                     coffee: coffeeName,
                     quantity: document.getElementById('quantityDisplay').textContent,
+                    additionalShots: additionalShots,
                     sugar: document.getElementById('sugarDisplay').textContent,
+                    customerName: document.getElementById('customerName').value.trim(),
                     milk: {
                         fullCream: document.getElementById('fullCream').checked,
                         almond: document.getElementById('almond').checked,
@@ -1169,7 +1308,6 @@
                         lactose: document.getElementById('lactose').checked
                     },
                     extraHot: document.getElementById('extraHot').checked,
-                    doubleShot: document.getElementById('doubleShot').checked,
                     halfStrength: document.getElementById('halfStrength').checked,
                     toppedUp: document.getElementById('toppedUp')?.checked || false,
                     short: document.getElementById('short')?.checked || false,
@@ -1201,10 +1339,11 @@
 
                 div.innerHTML = `
                     <p><strong>${order.quantity}x ${order.coffee}</strong></p>
+                    ${order.customerName ? `<p>Name: ${order.customerName}</p>` : ''}
                     ${milkTypes ? `<p>Milk: ${milkTypes}</p>` : ''}
+                    ${order.additionalShots > 0 ? `<p>Extra Shots: ${order.additionalShots}</p>` : ''}
                     ${order.sugar > 0 ? `<p>Sugar: ${order.sugar}</p>` : ''}
                     ${order.extraHot ? '<p>Extra Hot</p>' : ''}
-                    ${order.doubleShot ? '<p>Double Shot</p>' : ''}
                     ${order.halfStrength ? '<p>Half Strength</p>' : ''}
                     ${order.toppedUp ? '<p>Topped Up</p>' : ''}
                     ${order.short ? '<p>Short</p>' : ''}
@@ -1254,7 +1393,11 @@
 
                 const confirmDialog = document.getElementById('confirmDialog');
                 const message = confirmDialog.querySelector('#totalAmount');
-                message.textContent = `Total Amount: $${total.toFixed(2)}`;
+                const orderNumber = document.querySelector('.order-number input').value;
+                message.innerHTML = `
+                    <p>Order Number: ${orderNumber}</p>
+                    <p>Total Amount: $${total.toFixed(2)}</p>
+                `;
                 
                 // Reset all states
                 document.getElementById('cashInputSection').style.display = 'none';
@@ -1358,9 +1501,6 @@
             }
         }
 
-        // Initialize globally
-        window.coffeeOrder = new CoffeeOrder();
-
         // Global functions
         window.adjustQuantity = function(change) {
             const display = document.getElementById('quantityDisplay');
@@ -1373,6 +1513,13 @@
             const display = document.getElementById('sugarDisplay');
             let value = parseInt(display.textContent);
             value = Math.max(0, Math.min(6, value + change));
+            display.textContent = value;
+        };
+
+        window.adjustShots = function(change) {
+            const display = document.getElementById('shotsDisplay');
+            let value = parseInt(display.textContent);
+            value = Math.max(0, Math.min(10, value + change));
             display.textContent = value;
         };
 
@@ -1452,6 +1599,33 @@
 
         window.resetCashAmount = function() {
             document.getElementById('cashAmountDisplay').textContent = '0.00';
+        };
+        // Check if updates should be shown (expires next Sunday)
+        function shouldShowUpdates() {
+            // Set expiry date to next Sunday at midnight
+            const now = new Date();
+            const expiry = new Date();
+            expiry.setDate(now.getDate() + (7 - now.getDay()));
+            expiry.setHours(23, 59, 59, 999);
+
+            // Check if expired
+            if (now > expiry) {
+                return false;
+            }
+
+            // Check if already dismissed in this session
+            return !sessionStorage.getItem('updateDismissed');
+        }
+
+        // Show updates if needed
+        if (shouldShowUpdates()) {
+            document.getElementById('updateNotification').style.display = 'block';
+        }
+
+        // Dismiss update notification
+        window.dismissUpdate = function() {
+            document.getElementById('updateNotification').style.display = 'none';
+            sessionStorage.setItem('updateDismissed', 'true');
         };
     </script>
 </body>
