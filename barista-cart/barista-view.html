@@ -236,7 +236,7 @@
         <div id="ordersDisplay"></div>
     </div>
 
-    <div class="copyright">© 2025 Jordan Bartleman v2</div>
+    <div class="copyright">© 2025 Jordan Bartleman v4</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
@@ -376,10 +376,11 @@
 
                         return `
                             <p><strong>${item.quantity}x ${item.coffee}</strong></p>
+                            ${item.customerName ? `<p>Name: ${item.customerName}</p>` : ''}
                             ${milkTypes ? `<p>Milk: ${milkTypes}</p>` : ''}
+                            ${item.additionalShots > 0 ? `<p>Extra Shots: ${item.additionalShots}</p>` : ''}
                             ${item.sugar > 0 ? `<p>Sugar: ${item.sugar}</p>` : ''}
                             ${item.extraHot ? '<p>Extra Hot</p>' : ''}
-                            ${item.doubleShot ? '<p>Double Shot</p>' : ''}
                             ${item.halfStrength ? '<p>Half Strength</p>' : ''}
                             ${item.toppedUp ? '<p>Topped Up</p>' : ''}
                             ${item.short ? '<p>Short</p>' : ''}
