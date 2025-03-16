@@ -209,7 +209,7 @@
         </div>
     </div>
 
-    <div class="copyright">© 2025 Jordan Bartleman v2</div>
+    <div class="copyright">© 2025 Jordan Bartleman v4</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
@@ -288,6 +288,7 @@
                 },
                 options: {
                     responsive: true,
+                    backgroundColor: 'white',
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -295,6 +296,14 @@
                                 callback: function(value) {
                                     return '$' + value;
                                 }
+                            },
+                            grid: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#e0e0e0'
                             }
                         }
                     },
@@ -305,6 +314,11 @@
                                     return '$' + context.raw.toFixed(2);
                                 }
                             }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#333'
+                            }
                         }
                     }
                 }
@@ -314,15 +328,49 @@
         function exportChart() {
             const canvas = document.getElementById('paymentChart');
             
+            // Create a temporary canvas to draw with white background
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height + 100; // Add extra height for totals
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Fill white background
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Draw the original canvas on top
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // Add totals at the bottom
+            tempCtx.font = '14px Arial';
+            tempCtx.fillStyle = '#333';
+            
+            const cardTotal = document.getElementById('cardTotal').textContent;
+            const cashTotal = document.getElementById('cashTotal').textContent;
+            const combinedTotal = document.getElementById('combinedTotal').textContent;
+            
+            const startY = canvas.height + 30;
+            tempCtx.textAlign = 'left';
+            tempCtx.fillText(`Card Payments: ${cardTotal}`, 20, startY);
+            tempCtx.fillText(`Cash Payments: ${cashTotal}`, 20, startY + 20);
+            tempCtx.fillText(`Total Revenue: ${combinedTotal}`, 20, startY + 40);
+            
+            // Add date and time
+            const now = new Date();
+            const dateStr = now.toLocaleDateString();
+            const timeStr = now.toLocaleTimeString();
+            tempCtx.textAlign = 'right';
+            tempCtx.fillText(`Generated: ${dateStr} ${timeStr}`, tempCanvas.width - 20, startY + 40);
+            
             // Create a temporary link element
             const link = document.createElement('a');
             
             // Get current date for filename
             const date = new Date().toISOString().split('T')[0];
             
-            // Set download attributes
+            // Set download attributes using the temporary canvas
             link.download = `coffee-cart-finance-${date}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = tempCanvas.toDataURL('image/png');
             
             // Trigger download
             document.body.appendChild(link);
